@@ -28,7 +28,7 @@ UltraSonicDistanceSensor ultrasonic(D3, D4); //cảm biến nối với D3-D4
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883
 #define AIO_USERNAME    "Giaqui14032002"
-#define AIO_KEY         "aio_taOQ66uLpCNUIa7kL9rHI0gJ4unJ"
+#define AIO_KEY         "key"
 
 WiFiClient client;
 
@@ -115,7 +115,25 @@ void TaskTemperatureHumidity(void *pvParameters) {  // This is a task.
     lcd.setCursor(0, 1);
     lcd.print(dht20.getHumidity());
 
-    delay(5000);
+    float temp = dht20.getTemperature();
+    // float humi = dht20.getHumidity();
+    if(!temperature.publish(temp)) {
+      Serial.println("Fail");
+    }
+    else {
+      Serial.println("OK");
+    }
+
+    
+    float humi = dht20.getHumidity();
+    if(!humidity.publish(humi)) {
+      Serial.println("Fail");
+    }
+    else {
+      Serial.println("OK");
+    }
+
+    delay(15000);
   }
 }
 
@@ -143,8 +161,17 @@ void TaskLightAndLED(void *pvParameters) {  // This is a task.
   //uint32_t blink_delay = *((uint32_t *)pvParameters);
 
   while(1) {                          
-    Serial.println("Task Light and LED");
-    Serial.println(analogRead(A1));
+    // Serial.println("Task Light and LED");
+    float light_value = analogRead(A1);
+
+    // Serial.println(light_value);
+
+    if(!light.publish(light_value)) {
+      Serial.println("Fail");
+    }
+    else {
+      Serial.println("OK");
+    }
     if(analogRead(A1) < 350){
       pixels3.setPixelColor(0, pixels3.Color(255,0,0));      
       pixels3.show();
@@ -153,7 +180,7 @@ void TaskLightAndLED(void *pvParameters) {  // This is a task.
       pixels3.setPixelColor(0, pixels3.Color(0,0,0));      
       pixels3.show();
     }
-    delay(1000);
+    delay(15000);
   }
 }
 
@@ -183,12 +210,24 @@ void TaskUltraSonic(void *pvParameters) {
     if(ultrasonic.measureDistanceCm() < 10) {
       pixels3.setPixelColor(2, pixels3.Color(255,0,0));      
       pixels3.show();
+      if(!warning.publish("\n\nWarning\n")) {
+        Serial.println("Fail");
+      }
+      else {
+        Serial.println("OK");
+      }
     }
     else {
       pixels3.setPixelColor(2, pixels3.Color(0,0,0));      
       pixels3.show();
+      if(!warning.publish("\n\nSecurity\n")) {
+        Serial.println("Fail");
+      }
+      else {
+        Serial.println("OK");
+      }
     }
-    delay(1000);
+    delay(15000);
   }
 }
 
@@ -247,51 +286,7 @@ void MQTT_Adafruit_Sever(void *pvParameters) {
         }
       }
     }
-
-    float temp = dht20.getTemperature();
-    // float humi = dht20.getHumidity();
-    if(!temperature.publish(temp)) {
-      Serial.println("Fail");
-    }
-    else {
-      Serial.println("OK");
-    }
-
-    
-    float humi = dht20.getHumidity();
-    if(!humidity.publish(humi)) {
-      Serial.println("Fail");
-    }
-    else {
-      Serial.println("OK");
-    }
-
-    float light_value = analogRead(A1);
-    if(!light.publish(light_value)) {
-      Serial.println("Fail");
-    }
-    else {
-      Serial.println("OK");
-    }
-
-    if(ultrasonic.measureDistanceCm() < 10) {
-      if(!warning.publish("Warning\n")) {
-        Serial.println("Fail");
-      }
-      else {
-        Serial.println("OK");
-      }
-    }
-    else {
-      if(!warning.publish("Security\n")) {
-        Serial.println("Fail");
-      }
-      else {
-        Serial.println("OK");
-      }
-    }
     
   }
 
-  
 }
